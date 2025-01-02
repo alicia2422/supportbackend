@@ -1,5 +1,5 @@
 const Mongoose = require("mongoose");
-
+const {Schema} = Mongoose
 const UserModel = new Mongoose.Schema({
   name: {
     type: String,
@@ -44,11 +44,14 @@ const UserModel = new Mongoose.Schema({
     type: Number,
     default: 0,
   },
-  activeDeposit: {
-    type: Number,
-  },
+  activeDeposit: [{
+    type: Schema.Types.ObjectId,
+    ref:"investments",
+    default:[]
+}],
   lastDeposit: {
     type: Number,
+    
   },
   
 

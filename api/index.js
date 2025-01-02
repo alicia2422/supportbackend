@@ -3,45 +3,26 @@ const cors = require("cors");
 const connect_Db = require("./connectdb");
 const dotenv = require("dotenv");
 //  user Functions
-const {
-  login,
-  loginWithToken,
-  register,
-  getCoins,
-  getTotalStat,
-  addWallet,
-  verify,
-} = require("./Routes/user/userRoute.js");
 
 //  admin functions
-const {
-  editCoin,
-  verifyAdmin,
-  getStats,
-  getInvestments,
-  getWithdrawals,
-  approveWithdrawal,
-  declineWithdrawal,
-  approveDeposit,
-  declineInvestment,
-} = require("./Routes/admin/adminRoute.js");
+
 
 //  request functions
 
-const { withdraw, invest } = require("./Routes/requests/requests.js");
 const userRouter = require("./Routes/user/userRoute");
 const handleError = require("./error");
-const requestRoute = require("./Routes/requests/requests.js");
-const adminRouter = require("./Routes/admin/adminRoute.js");
+const requestRoute = require("./Routes/requests/requestRoute.js");
+const adminRouter = require("./Routes/admin/route.js");
 
 dotenv.config();
 const server = express();
 server.use(cors());
 server.use(express.json());
+server.use("/users", userRouter)
+server.use("/admin", adminRouter)
+server.use("/requests", requestRoute)
 
-
-//  user routing optimized to fit with vercel's free tier serverless function count policy
-server.use("/users",userRouter)
+//  user routing optimized to fit with vercel's free tier serverless function count polic
 // server.post("users/login", login);
 // server.post("users/register", register);
 // server.get("users/getcoins", getCoins);

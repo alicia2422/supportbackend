@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const {Schema}= mongoose
 const withdrawalSchema = mongoose.Schema(
   {
     amount: {
@@ -6,7 +7,8 @@ const withdrawalSchema = mongoose.Schema(
       required: true,
     },
     userId: {
-      type: String,
+      type: Schema.Types.ObjectId,
+      ref:"users",
       required: true,
     },
     approvedDate: {

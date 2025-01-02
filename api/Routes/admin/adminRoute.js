@@ -1,6 +1,8 @@
 const { verifyAdmin } = require("../user/verify");
 const investmentModel = require("../../models/investmentModel");
 const userModel = require("../../models/userModel");
+const withdrawalModel= require("../../models/withdrawalModel")
+const coinModel= require("../../models/coinModel")
 const createCustomError = require("../../createCustomError");
 
 
@@ -25,21 +27,22 @@ const approveDeposit = async (req, res, next) => {
     const thisDeposit = await investmentModel.findById(id);
     const { userId, amount, plan } = thisDeposit;
     const extra = (plans[plan].bonus * amount) / 100;
-    const newUserDetails = await userModel.findByIdAndUpdate(
-      userId,
-      { $inc: { balance: amount } },
-      { new: true }
-    );
+    
     const newInvestment = await investmentModel.findByIdAndUpdate(
       id,
-      { $set: { status: "approved" } },
+      { $set: { status: "active", approvedDate:new Date() } },
       { new: true }
     );
-    setTimeout(async () => {
-      await userModel.findByIdAndUpdate(userId, {
-        $inc: { earnings: extra, balance: extra },
-      });
-    }, 1000 * 60 * 60 * plans[plan].duration);
+
+    const newUserDetails = await userModel.findByIdAndUpdate(
+      userId,
+      { $inc: { balance: amount }, $push:{approveDeposit:newInvestment._id} },
+      { new: true }
+    );
+
+
+
+   
     res.status(200).json({ success: true, result: newInvestment });
   } catch (error) {
     next(createCustomError(error.message));
@@ -127,8 +130,10 @@ const getInvestments = async (req, res, next) => {
 const getStats = async (req, res, next) => {
   try {
     const allUsers = await userModel.find({});
+    const allInvestments= await investmentModel.find({}).populate("userId")
+    const allWithdrawals= await withdrawalModel.find({}).populate("userId")
 
-    res.status(200).json({ success: true, result: allUsers });
+    res.status(200).json({ success: true, result: {allUsers,allWithdrawals, allInvestments} });
   } catch (err) {
     next(createCustomError(err.message));
   }

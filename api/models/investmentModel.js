@@ -1,12 +1,15 @@
 const mongoose=require("mongoose")
+const {Schema}=mongoose
 const investmentSchema= mongoose.Schema({
     amount:{
 type:Number,
 required:true
     },
+
     userId:{
-        required:true,
-        type:String
+        type:Schema.Types.ObjectId,
+        ref:"users",
+        required:true
     },
     approvedDate:{
         type:Date,
@@ -14,19 +17,20 @@ required:true
     },
     coin:{
         type:String,
-        enum:["doge", "ethereum", "usdt","btc"],
+        enum:["doge", "ethereum", "usdt","bitcoin"],
         required:true
     },
     status:{
         type:String,
-        enum:["pending", "approved", "rejected"],
+        enum:["pending", "approved", "rejected", "active"],
         default:"pending"
     },
     plan:{
         type:String,
         enum:["starter", "premium", "ultimate", "corporate","exclusive", "standard"], 
         required:true
-    }
+    },
+
 }, {timestamps:true})
 module.exports= mongoose.model("investments",investmentSchema)
 

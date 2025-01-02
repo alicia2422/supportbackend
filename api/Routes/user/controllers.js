@@ -2,7 +2,21 @@ const createCustomError = require("../../createCustomError");
 const userModel = require("../../models/userModel");
 const investmentModel = require("../../models/investmentModel");
 const withdrawalModel = require("../../models/withdrawalModel");
+const coinModel=require("../../models/coinModel.js")
+const jwt = require("jsonwebtoken")
+const {differenceInHours}= require("date-fns")
+const {transporter,setMailOptions}= require("../../../emailconfig.js")
 const { verify } = require("./verify.js");
+const getEmailTemplate = require("../../../createEmailtemplate.js");
+const plans = {
+  starter: { bonus: 15, duration: 24 },
+  premium: { bonus: 40, duration: 48 },
+  ultimate: { bonus: 65, duration: 72 },
+  standard: { bonus: 25, duration: 48 },
+  exclusive: { bonus: 50, duration: 72 },
+  corporate: { bonus: 50, duration: 72 },
+};
+const siteUrl= "https://healthsupportservices.onrender.com"
 //  add wallet
 const addWallet = async (req, res, next) => {
   try {
@@ -40,7 +54,7 @@ const getCoins = async (req, res, next) => {
 //  login
 const login = async (req, res, next) => {
   const { password, email } = req.body;
-  const thisUser = await userModel.findOne({ email });
+  let thisUser = await userModel.findOne({ email }).populate("activeDeposit");
   if (!thisUser) {
     return res.status(404).json({
       success: false,
@@ -51,11 +65,27 @@ const login = async (req, res, next) => {
       .status(403)
       .json({ success: false, result: "Incorrect password" });
   } else {
+
+    const updatedDeposits = await Promise.all(
+      thisUser.activeDeposit.map(async (deposit) => {
+       const {plan,approvedDate,amount}= deposit
+       console.log({deposit})
+       const timeDiff=differenceInHours(new Date(),approvedDate)
+       const timeHasElapsed=timeDiff>=plans[plan].duration
+       if(timeHasElapsed){
+        const payment= plans[plan].bonus/100*amount
+        thisUser=await userModel.findByIdAndUpdate(thisUser._id,{$inc:{balance:payment,earnings:payment},$pull:{activeDeposit:deposit._id}})
+        const updatedInvestment=await investmentModel.findByIdAndUpdate(deposit._id,{$set:{status:"approved"}})
+       }
+      })
+    )
+
     const token = await jwt.sign(
       { id: thisUser._id, isAdmin: thisUser.isAdmin },
       process.env.jwt_pass
     );
     const { password, ...others } = thisUser._doc;
+
     return res
       .status(200)
       .json({ success: true, result: { ...others, token } });
@@ -68,11 +98,27 @@ const loginWithToken = async (req, res, next) => {
   const { user } = req;
   const { id } = user;
   console.log(id);
-  const thisUser = await userModel.findById(id);
+  let thisUser = await userModel.findById(id).populate("activeDeposit");
   if (!thisUser) {
     console.log("user not found");
     return res.status(404).json({ success: false, result: "user not found" });
   } else {
+
+    const updatedDeposits = await Promise.all(
+      thisUser.activeDeposit.map(async (deposit) => {
+       const {plan,approvedDate,amount}= deposit
+       console.log({deposit})
+       const timeDiff=differenceInHours(new Date(),approvedDate)
+       console.log(plans[plan])
+       const timeHasElapsed=timeDiff>=plans[plan].duration
+       if(timeHasElapsed){
+        const payment= plans[plan].bonus/100*amount
+        thisUser=await userModel.findByIdAndUpdate(thisUser._id,{$inc:{balance:payment,earnings:payment},$pull:{activeDeposit:deposit._id}})
+        const updatedInvestment=await investmentModel.findByIdAndUpdate(deposit._id,{$set:{status:"approved"}})
+       }
+      })
+    )
+
     const { password, ...others } = thisUser._doc;
     console.log(thisUser);
     return res.status(200).json({ success: true, result: others });
@@ -124,6 +170,66 @@ const getTotalStat = async (req, res, next) => {
 };
 // get stats logic ends here
 
+// account recovery
+
+const recoverAccount=async(req,res,next)=>{
+  
+  try {
+    const {email}= req.body
+   const thisUser= await  userModel.findOne({email})
+   if(!email){
+    return res.status(404).json({success:false, result:"No user was found with this email"})
+   }
+   else{
+    const message="Please click the button below to reset your password"
+    const html=getEmailTemplate(thisUser.name,message,true,"reset password",`${siteUrl}/resetpassword/${thisUser._id}`)
+    await transporter.sendMail(
+      setMailOptions(email,html)
+    ,(err,info)=>{
+      if(err){
+        return res.status(500).json({success:false, result:err.message})
+      }
+      else{
+        
+        return res.status(200).json({success:true, result:"done"})
+
+      }
+    })
+   }
+  } catch (error) {
+    next(createCustomError(error.message))
+  }
+}
+
+const resetPassword=async(req,res,next)=>{
+  try{
+    const {password,id}= req.body
+  
+
+    const updatedUser=await userModel.findByIdAndUpdate(id,{$set:{password}})
+    return res.status(200).json({success:true,result:updatedUser})
+  }catch(err){
+   next(createCustomError(err.message)) 
+  }
+
+}
+const promoteUser=async(req,res,next)=>{
+try {
+  const updatedUser= await  userModel.findByIdAndUpdate(req.params.id,{$set:{isAdmin:true}})
+  return res.status(200).json({success:true,result:updatedUser})
+} catch (error) {
+  next(createCustomError(error.message))
+}
+}
+
+const demoteUser=async(req,res,next)=>{
+  try {
+    const updatedUser= await  userModel.findByIdAndUpdate(req.params.id,{$set:{isAdmin:false}})
+    return res.status(200).json({success:true,result:updatedUser})
+  } catch (error) {
+    next(createCustomError(error.message))
+  }
+  }
 module.exports = {
   login,
   verify,
@@ -132,4 +238,8 @@ module.exports = {
   getCoins,
   getTotalStat,
   addWallet,
+  resetPassword,
+  recoverAccount,
+  promoteUser,
+  demoteUser
 };
