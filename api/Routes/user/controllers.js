@@ -278,9 +278,9 @@ const demoteUser=async(req,res,next)=>{
     const {id}= req.params;
     const updatedUser= await userModel.findByIdAndUpdate(id,{$set:{status:"approved"}});
     const message=`Welcome aboard ${updatedUser.name} we are pleased to inform  you that your request has been approved`
-    const html=getEmailTemplate(updatedUser.name,message,true,"reset password",`${siteUrl}/resetpassword/${thisUser._id}`)
+    const html=getEmailTemplate(updatedUser.name,message)
     await transporter.sendMail(
-      setMailOptions(email,html)
+      setMailOptions(updatedUser.email,html)
     ,(err,info)=>{
       if(err){
         return res.status(500).json({success:false, result:err.message})
