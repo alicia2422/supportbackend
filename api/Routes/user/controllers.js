@@ -273,6 +273,30 @@ const demoteUser=async(req,res,next)=>{
     }
 
   }
+  const approveUser=async(req,res,next)=>{
+  try{
+    const {id}= req.params;
+    const updatedUser= await userModel.findByIdAndUpdate(id,{$set:{status:"approved"}});
+    const message=`Welcome aboard ${updatedUser.name} we are pleased to inform  you that your request has been approved`
+    const html=getEmailTemplate(updatedUser.name,message,true,"reset password",`${siteUrl}/resetpassword/${thisUser._id}`)
+    await transporter.sendMail(
+      setMailOptions(email,html)
+    ,(err,info)=>{
+      if(err){
+        return res.status(500).json({success:false, result:err.message})
+      }
+      else{
+        
+        return res.status(200).json({success:true, result:"done"})
+
+      }
+    })
+    return res.status(200).json({success:true, result:"approved"})
+}catch(err){
+  next(createCustomError(err.message))
+}
+
+  }
 module.exports = {
   login,
   verify,
@@ -287,5 +311,6 @@ module.exports = {
   demoteUser,
   deleteUser,
   getSingleUser,
-  sendMessage
+  sendMessage,
+  approveUser
 };

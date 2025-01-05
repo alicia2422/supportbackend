@@ -13,6 +13,7 @@ const userRouter = require("./Routes/user/userRoute");
 const handleError = require("./error");
 const requestRoute = require("./Routes/requests/requestRoute.js");
 const adminRouter = require("./Routes/admin/route.js");
+const userModel = require("./models/userModel.js");
 
 dotenv.config();
 const server = express();
@@ -65,6 +66,7 @@ server.get("/", (req, res, next) => {
 const startServer = async () => {
   try {
     await connect_Db(mongo_uri);
+    // await userModel.updateMany({},{$set:{stautus:"approved"}})
     server.listen(port, () => {
       console.log(`Server is actively listening on port ${port}`);
     });

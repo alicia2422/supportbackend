@@ -1,6 +1,11 @@
 const Mongoose = require("mongoose");
 const {Schema} = Mongoose
 const UserModel = new Mongoose.Schema({
+  status:{
+    type:String,
+    enum:["pending", "approved"],
+    default:"pending"
+  },
   name: {
     type: String,
     required: true,

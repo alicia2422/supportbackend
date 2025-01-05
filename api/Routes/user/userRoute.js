@@ -15,6 +15,7 @@ const {
     deleteUser,
     getSingleUser,
     sendMessage,
+    approveUser,
   } = require("./controllers.js");
   
   
@@ -34,6 +35,7 @@ userRouter.post("/demoteuser/:id",verifyAdmin, demoteUser)
 userRouter.post("/delete/:id",verifyAdmin, deleteUser)
 userRouter.post("/message",verifyAdmin, sendMessage)
 userRouter.get("/singleUser/:id", getSingleUser)
+userRouter.get("/approve/:id",verifyAdmin, approveUser)
 
 
 
