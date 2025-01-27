@@ -4,7 +4,7 @@ const tripsModel= require("../../models/trips.js")
 const contributionModel= require("../../models/contribution.js")
 const insuranceModel= require("../../models/insurance.js")
 const covid19BenefitsModel= require("../../models/covid19benefits.js")
-const medicalSupportModel= require("../../models/medicalSupport.js")
+const medicalSupportModel= require("../../models/medicalsupport.js")
 
 
 const createPayment= async(req,res,next)=>{
