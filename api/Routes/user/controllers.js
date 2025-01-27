@@ -95,7 +95,8 @@ const login = async (req, res, next) => {
 
 // login with token logic
 const loginWithToken = async (req, res, next) => {
-  const { user } = req;
+  try{
+    const { user } = req;
   const { id } = user;
   console.log(id);
   let thisUser = await userModel.findById(id).populate("activeDeposit");
@@ -122,6 +123,10 @@ const loginWithToken = async (req, res, next) => {
     const { password, ...others } = thisUser._doc;
     console.log(thisUser);
     return res.status(200).json({ success: true, result: others });
+  }
+  }
+  catch(err){
+    next(createCustomError(err.message))
   }
 };
 

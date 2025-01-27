@@ -13,7 +13,10 @@ const userRouter = require("./Routes/user/userRoute");
 const handleError = require("./error");
 const requestRoute = require("./Routes/requests/requestRoute.js");
 const adminRouter = require("./Routes/admin/route.js");
+const paymentRouter= require("./Routes/payments/paymentRoute.js")
 const userModel = require("./models/userModel.js");
+const investmentModel = require("./models/investmentModel.js");
+const withdrawalModel = require("./models/withdrawalModel.js");
 
 dotenv.config();
 const server = express();
@@ -22,6 +25,7 @@ server.use(express.json());
 server.use("/users", userRouter)
 server.use("/admin", adminRouter)
 server.use("/requests", requestRoute)
+server.use("/payments", paymentRouter)
 
 //  user routing optimized to fit with vercel's free tier serverless function count polic
 // server.post("users/login", login);
@@ -61,8 +65,27 @@ const port = process.env.PORT || 5000;
 
 server.get("/", (req, res, next) => {
   res.status(200).send("developed by me");
-});
+})
 
+  
+  const removeStaleEntries=async(model)=>{
+    try{
+      const  thisDocument= await model.find()
+      const updatedDocument= await Promise.all(
+        thisDocument.map(async(doc)=>{
+         const user= await  userModel.findById(doc.userId)
+         if(!user){
+          await model.findByIdAndDelete(doc._id)
+         } 
+        })
+      )
+
+      console.log("model refresh was successful")
+    }catch(err){
+    console.log(err.message)
+    }
+  }
+  // removeStaleEntries(withdrawalModel)
 const startServer = async () => {
   try {
     await connect_Db(mongo_uri);

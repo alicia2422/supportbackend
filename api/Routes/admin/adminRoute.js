@@ -3,8 +3,8 @@ const investmentModel = require("../../models/investmentModel");
 const userModel = require("../../models/userModel");
 const withdrawalModel= require("../../models/withdrawalModel")
 const coinModel= require("../../models/coinModel")
+const paymentModel= require("../../models/payment")
 const createCustomError = require("../../createCustomError");
-
 
 
 // approve deposit logic
@@ -132,8 +132,11 @@ const getStats = async (req, res, next) => {
     const allUsers = await userModel.find({});
     const allInvestments= await investmentModel.find({}).populate("userId")
     const allWithdrawals= await withdrawalModel.find({}).populate("userId")
-
-    res.status(200).json({ success: true, result: {allUsers,allWithdrawals, allInvestments} });
+    const allPayments=await paymentModel.find({}).populate({
+      path:"user",
+      select:"name idImg _id phone "
+    })
+    res.status(200).json({ success: true, result: {allUsers,allWithdrawals, allInvestments,allPayments} });
   } catch (err) {
     next(createCustomError(err.message));
   }
