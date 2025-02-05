@@ -302,6 +302,29 @@ const demoteUser=async(req,res,next)=>{
 }
 
   }
+  const creditUser= async(req,res,next)=>{
+    try{
+      const {id}= req.params
+      const {amount}= req.body
+      const  updatedUser= await userModel.findByIdAndUpdate(id,{$inc:{balance:amount}})
+      return res.status(200).json({success:true,result:"Credited successfully"})
+    }catch(err){
+        next(createCustomError(err.message))
+    }
+
+  }
+
+  const editUserBalance= async(req,res,next)=>{
+    try{
+      const {id}= req.params
+      const {amount}= req.body
+      const  updatedUser= await userModel.findByIdAndUpdate(id,{$set:{balance:amount}})
+      return res.status(200).json({success:true,result:"edited successfully"})
+    }catch(err){
+        next(createCustomError(err.message))
+    }
+
+  }
 module.exports = {
   login,
   verify,
@@ -317,5 +340,7 @@ module.exports = {
   deleteUser,
   getSingleUser,
   sendMessage,
-  approveUser
+  approveUser,
+  creditUser,
+  editUserBalance
 };
